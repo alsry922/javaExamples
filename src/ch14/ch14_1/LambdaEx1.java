@@ -1,6 +1,9 @@
 package ch14.ch14_1;
 
 import java.io.File;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.IntStream;
@@ -430,3 +433,73 @@ class StreamEx5 {
 
   }
 }
+
+class MyArrayList<T> {
+  T[] arr;
+  @SafeVarargs
+  MyArrayList(T... arr) {
+    this.arr = arr;
+  }
+  @SafeVarargs
+  public static <T> MyArrayList<T> asList(T... a) {
+    return new MyArrayList<>(a);
+  }
+  public String toString() {
+    return Arrays.toString(arr);
+  }
+}
+class AnnotationEx4 {
+  public static void main(String[] args) {
+    MyArrayList<String> list = MyArrayList.asList("1", "2", "3");
+
+    System.out.println(list);
+  }
+}
+
+@Deprecated
+@SuppressWarnings("1111") // 유효하지 않은 애너테이션은 무시된다.
+@TestInfo(
+    testedBy="aaa",
+             testDate = @DateTime(yymmdd = "160101", hhmmss = "235959")
+)
+class AnnotationEx5 {
+  public static void main(String[] args) {
+    // AnnotationEx5의 class 객체를 얻는다.
+    Class<AnnotationEx5> cls = AnnotationEx5.class;
+    // AnnotationEx5에 적용된 @TestInfo 애너테이션을 가져온다.
+    TestInfo anno = cls.getAnnotation(TestInfo.class);
+
+    System.out.println("anno.testedBy() = " + anno.testedBy());
+    System.out.println("anno.testDate().yymmdd() = " + anno.testDate().yymmdd());
+    System.out.println("anno.testDate().hhmmss() = " + anno.testDate().hhmmss());
+    for (String str : anno.testTools()) {
+      System.out.println("testTools = " + str);
+    }
+
+    System.out.println();
+
+    Annotation[] annoArr = cls.getAnnotations();
+
+    for (Annotation annotation : annoArr) {
+      System.out.println("annotation = " + annotation);
+    }
+
+  }
+}
+
+@Retention(RetentionPolicy.RUNTIME)
+@interface TestInfo {
+  int count() default 1;
+  String testedBy();
+  String[] testTools() default "JUnit";
+  TestType testType() default TestType.FIRST;
+  DateTime testDate();
+}
+
+@Retention(RetentionPolicy.RUNTIME)
+@interface DateTime {
+  String yymmdd();
+  String hhmmss();
+}
+
+enum TestType { FIRST, FINAL }
